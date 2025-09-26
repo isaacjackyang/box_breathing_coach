@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>盒式呼吸｜放鬆練習</title>
+  <meta name="description" content="簡潔的盒式呼吸（吸-停-呼-停）練習工具，支援自訂節奏、聲音提示、全螢幕、鍵盤快捷鍵。" />
+  <style>
+    :root{
+      --bg: #0b1020;
+      --fg: #e9eefb;
+      --muted: #9fb0d0;
+      --accent: #6aa8ff;
+      --accent-2: #7effc5;
+      --danger: #ff6b6b;
+      --panel: #131a33;
+      --ring: #223060;
+    }
+    html, body {
+      height: 100%;
+    }
+    body {
+      margin: 0;
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans TC", "Helvetica Neue", Arial, "Apple Color Emoji", "Segoe UI Emoji";
+      background: radial-gradient(1200px 800px at 70% -10%, #18224a 0%, var(--bg) 55%);
+      color: var(--fg);
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      gap: 12px;
+      min-height: 100vh;
+    }
+    header, footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 18px;
+      background: linear-gradient(180deg, rgba(19,26,51,.9), rgba(19,26,51,.6));
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      backdrop-filter: blur(6px);
+    }
+    header h1 {
+      font-size: 18px;
+      margin: 0;
+      letter-spacing: .5px;
+      color: var(--fg);
+    }
+    .muted { color: var(--muted); }
+
+    .container {
+      display: grid;
+      grid-template-columns: 320px 1fr;
+      gap: 18px;
+      padding: 18px;
+    }
+    @media (max-width: 900px) {
+      .container { grid-template-columns: 1fr; }
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 16px;
+      padding: 16px;
+      box-shadow: 0 10px 30px rgba(0,0,0,.3);
+    }
+
+    .controls label { display:block; font-size: 14px; margin: 12px 0 6px; color: var(--muted); }
+    .controls input[type="number"], .controls input[type="range"], .controls select {
+      width: 100%; padding: 10px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.08);
+      background: #0f1530; color: var(--fg);
+    }
+    .row { display:flex; gap: 10px; }
+    .row > * { flex: 1; }
+
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+      padding: 10px 14px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1);
+      background: linear-gradient(180deg, #18224a, #111735);
+      color: var(--fg); cursor: pointer; font-weight: 600;
+      transition: transform .06s ease, background .2s ease, border-color .2s ease;
+      user-select: none;
+    }
+    .btn:hover { transform: translateY(-1px); border-color: rgba(255,255,255,0.18); }
+    .btn:active { transform: translateY(0); }
+    .btn-primary { background: linear-gradient(180deg, #3677ff, #2151c8); border-color: #2d63e6; }
+    .btn-danger { background: linear-gradient(180deg, #ff7272, #d74646); border-color: #ff8686; }
+    .btn-ghost { background: transparent; border-color: rgba(255,255,255,0.12); }
+    .btn-toggle.active { outline: 2px solid var(--accent); }
+
+    .hint { font-size: 12px; color: var(--muted); margin-top: 8px; line-height: 1.5; }
+
+    /* Coach area */
+    .stage {
+      display: grid; place-items: center; height: 100%;
+    }
+    .coach {
+      display: grid; gap: 14px; place-items: center;
+    }
+    .phase {
+      font-size: clamp(26px, 3.8vw, 44px);
+      font-weight: 800; letter-spacing: 1px;
+      text-shadow: 0 8px 24px rgba(0,0,0,.45);
+    }
+    .countdown { font-size: clamp(18px, 3vw, 28px); color: var(--accent-2); font-variant-numeric: tabular-nums; }
+    .cycle { color: var(--muted); font-size: 14px; }
+
+    /* Square track */
+    .board {
+      width: min(68vh, 68vw);
+      aspect-ratio: 1 / 1;
+      position: relative;
+      border-radius: 18px;
+      border: 2px solid var(--ring);
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.04), 0 20px 60px rgba(0,0,0,.35);
+      background: radial-gradient(500px 300px at 20% 0%, rgba(106,168,255,.12), transparent 60%);
+      overflow: hidden;
+    }
+    .progress {
+      position: absolute; inset: 0; pointer-events: none;
+    }
+    .edge {
+      position: absolute; background: linear-gradient(90deg, var(--accent), transparent);
+      opacity: .28;
+    }
+    .edge.top { top: 0; left: 0; height: 4px; width: 0%; }
+    .edge.right { top: 0; right: 0; width: 4px; height: 0%; background: linear-gradient(180deg, var(--accent), transparent); }
+    .edge.bottom { bottom: 0; right: 0; height: 4px; width: 0%; background: linear-gradient(270deg, var(--accent), transparent); }
+    .edge.left { bottom: 0; left: 0; width: 4px; height: 0%; background: linear-gradient(0deg, var(--accent), transparent); }
+
+    .dot {
+      --s: 18px; width: var(--s); height: var(--s);
+      border-radius: 999px; background: radial-gradient(circle at 30% 30%, #fff, #cfe2ff 35%, #5da1ff 60%, #1f4dbd);
+      box-shadow: 0 0 0 6px rgba(106,168,255,.12), 0 12px 28px rgba(0,0,0,.45);
+      position: absolute; left: -9px; top: -9px;
+      transform: translate(0, 0);
+      transition: filter .2s ease;
+    }
+
+    .breath-bar {
+      width: 100%; height: 10px; border-radius: 999px; background: rgba(255,255,255,0.06);
+      overflow: hidden; margin-top: 10px; border: 1px solid rgba(255,255,255,0.08);
+    }
+    .breath-fill {
+      height: 100%; width: 0%; background: linear-gradient(90deg, var(--accent), var(--accent-2));
+      transition: width .2s linear;
+    }
+
+    .kbd { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; font-size: 12px; padding: 2px 6px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.15); }
+
+    details { border-top: 1px dashed rgba(255,255,255,0.15); margin-top: 12px; padding-top: 10px; }
+    summary { cursor: pointer; color: var(--muted); }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>盒式呼吸｜放鬆練習</h1>
+    <div class="muted">吸 → 停 → 呼 → 停｜視覺、聲音、鍵盤操控</div>
+  </header>
+
+  <main class="container">
+    <section class="panel controls" aria-label="控制面板">
+      <div class="row">
+        <div>
+          <label for="sec">每一側秒數（吸/停/呼/停）</label>
+          <input id="sec" type="number" min="2" max="20" step="1" value="4" />
+        </div>
+        <div>
+          <label for="cycles">循環次數（4步為 1 循環）</label>
+          <input id="cycles" type="number" min="1" max="60" step="1" value="6" />
+        </div>
+      </div>
+
+      <div class="row" style="margin-top:8px; align-items:center;">
+        <button id="startBtn" class="btn btn-primary" aria-label="開始或暫停"><span id="startLabel">開始</span>（空白鍵）</button>
+        <button id="resetBtn" class="btn btn-ghost" aria-label="重置">重置 <span class="muted">R</span></button>
+        <button id="fsBtn" class="btn btn-ghost" aria-label="全螢幕">全螢幕 <span class="muted">F</span></button>
+      </div>
+
+      <div class="row" style="margin-top:8px; align-items:center;">
+        <button id="soundBtn" class="btn btn-toggle" aria-pressed="false" aria-label="聲音提示切換">聲音提示 <span class="muted">S</span></button>
+        <button id="infiniteBtn" class="btn btn-toggle" aria-pressed="false" aria-label="無限循環切換">無限循環</button>
+        <button id="panicBtn" class="btn btn-danger" aria-label="立刻停止">中止</button>
+      </div>
+
+      <details>
+        <summary>鍵盤快捷鍵</summary>
+        <div class="hint">
+          <span class="kbd">Space</span> 開始/暫停；
+          <span class="kbd">R</span> 重置；
+          <span class="kbd">F</span> 全螢幕；
+          <span class="kbd">S</span> 聲音；
+          <span class="kbd">+</span>/<span class="kbd">-</span> 每側秒數 ±1；
+          <span class="kbd">[</span>/<span class="kbd">]</span> 循環數 ±1。
+        </div>
+      </details>
+
+      <details>
+        <summary>安全提醒與說明</summary>
+        <div class="hint">
+          放鬆為首要目標。若感到暈眩、胸悶或不適，請立即停止並恢復自然呼吸。若有心肺或血壓相關疾病、懷孕或醫師不建議的情況，請先諮詢專業。
+        </div>
+      </details>
+    </section>
+
+    <section class="panel stage" aria-live="polite" aria-atomic="true">
+      <div class="coach">
+        <div class="phase" id="phaseText">準備</div>
+        <div class="countdown" id="countText">—</div>
+        <div class="cycle" id="cycleText">循環 0</div>
+
+        <div class="board" aria-hidden="true">
+          <div class="progress">
+            <div class="edge top" id="edgeTop"></div>
+            <div class="edge right" id="edgeRight"></div>
+            <div class="edge bottom" id="edgeBottom"></div>
+            <div class="edge left" id="edgeLeft"></div>
+            <div class="dot" id="dot"></div>
+          </div>
+        </div>
+
+        <div class="breath-bar" aria-hidden="true"><div class="breath-fill" id="breathFill"></div></div>
+        <div class="hint">提示：放鬆肩頸與下顎，舌尖輕抵上顎，腹部自然起伏。</div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="muted">這個工具不收集任何資料。設定會保存在瀏覽器本機。</div>
+    <div class="muted">© 2025 Box Breathing Coach</div>
+  </footer>
+
+  <script>
+    // —— 簡單狀態機 ——
+    const Phase = { Inhale: 0, Hold1: 1, Exhale: 2, Hold2: 3 };
+    const PhaseName = {
+      [Phase.Inhale]: '吸氣',
+      [Phase.Hold1]: '閉氣',
+      [Phase.Exhale]: '呼氣',
+      [Phase.Hold2]: '閉氣'
+    };
+
+    const secInput = document.getElementById('sec');
+    const cyclesInput = document.getElementById('cycles');
+    const startBtn = document.getElementById('startBtn');
+    const startLabel = document.getElementById('startLabel');
+    const resetBtn = document.getElementById('resetBtn');
+    const fsBtn = document.getElementById('fsBtn');
+    const soundBtn = document.getElementById('soundBtn');
+    const infiniteBtn = document.getElementById('infiniteBtn');
+    const panicBtn = document.getElementById('panicBtn');
+
+    const phaseText = document.getElementById('phaseText');
+    const countText = document.getElementById('countText');
+    const cycleText = document.getElementById('cycleText');
+
+    const edgeTop = document.getElementById('edgeTop');
+    const edgeRight = document.getElementById('edgeRight');
+    const edgeBottom = document.getElementById('edgeBottom');
+    const edgeLeft = document.getElementById('edgeLeft');
+    const dot = document.getElementById('dot');
+    const breathFill = document.getElementById('breathFill');
+
+    const store = {
+      load(){
+        try{
+          const s = JSON.parse(localStorage.getItem('boxbreath-v1')||'{}');
+          if(s.sec) secInput.value = s.sec;
+          if(s.cycles) cyclesInput.value = s.cycles;
+          if(typeof s.soundOn === 'boolean') setToggle(soundBtn, s.soundOn);
+          if(typeof s.infinite === 'boolean') setToggle(infiniteBtn, s.infinite);
+        }catch{}
+      },
+      save(){
+        const s = {
+          sec: Number(secInput.value||4),
+          cycles: Number(cyclesInput.value||6),
+          soundOn: isOn(soundBtn),
+          infinite: isOn(infiniteBtn)
+        };
+        localStorage.setItem('boxbreath-v1', JSON.stringify(s));
+      }
+    };
+
+    function setToggle(btn, on){
+      btn.classList.toggle('active', on);
+      btn.setAttribute('aria-pressed', String(on));
+    }
+    function isOn(btn){ return btn.classList.contains('active'); }
+
+    // —— 聲音提示 ——
+    let audioCtx = null;
+    function beep(){
+      if(!isOn(soundBtn)) return;
+      try{
+        if(!audioCtx) audioCtx = new (window.AudioContext||window.webkitAudioContext)();
+        const o = audioCtx.createOscillator();
+        const g = audioCtx.createGain();
+        o.type = 'sine';
+        o.frequency.value = 880; // A5
+        g.gain.value = 0.001; // start silent
+        o.connect(g); g.connect(audioCtx.destination);
+        o.start();
+        // quick attack/decay
+        const now = audioCtx.currentTime;
+        g.gain.exponentialRampToValueAtTime(0.2, now + 0.02);
+        g.gain.exponentialRampToValueAtTime(0.0001, now + 0.18);
+        o.stop(now + 0.2);
+      }catch{}
+    }
+
+    // —— 運動控制 ——
+    let running = false;
+    let paused = false;
+    let raf = 0;
+
+    let phase = Phase.Inhale;
+    let phaseStart = 0;
+    let secEach = 4;
+    let cyclesTarget = 6;
+    let cyclesDone = 0;
+
+    function now(){ return performance.now(); }
+
+    function resetVisual(){
+      edgeTop.style.width = '0%';
+      edgeRight.style.height = '0%';
+      edgeBottom.style.width = '0%';
+      edgeLeft.style.height = '0%';
+      dot.style.transform = `translate(0px, 0px)`;
+      breathFill.style.width = '0%';
+      countText.textContent = '—';
+      phaseText.textContent = '準備';
+      cycleText.textContent = `循環 ${cyclesDone}`;
+    }
+
+    function configure(){
+      secEach = clamp(Number(secInput.value||4), 2, 20);
+      cyclesTarget = clamp(Number(cyclesInput.value||6), 1, 60);
+      secInput.value = secEach; cyclesInput.value = cyclesTarget;
+      store.save();
+    }
+
+    function clamp(v, a, b){ return Math.max(a, Math.min(b, v)); }
+
+    function start(){
+      if(running && !paused){ pause(); return; }
+      if(paused){ paused = false; phaseStart = now() - pausedOffset; loop(); updateButtons(); return; }
+      // fresh start
+      configure();
+      running = true; paused = false; cyclesDone = 0; phase = Phase.Inhale; phaseStart = now();
+      phaseText.textContent = PhaseName[phase];
+      cycleText.textContent = `循環 ${cyclesDone}`;
+      beep();
+      cancelAnimationFrame(raf); loop(); updateButtons();
+    }
+
+    function pause(){
+      paused = true; cancelAnimationFrame(raf); pausedOffset = now() - phaseStart; updateButtons();
+    }
+
+    function stopAll(){
+      running = false; paused = false; cancelAnimationFrame(raf); resetVisual(); updateButtons();
+    }
+
+    function updateButtons(){
+      startLabel.textContent = (!running || paused) ? '開始' : '暫停';
+    }
+
+    let pausedOffset = 0;
+
+    function nextPhase(){
+      phase = (phase + 1) % 4;
+      phaseStart = now();
+      phaseText.textContent = PhaseName[phase];
+      if(phase === Phase.Inhale) {
+        // 完成一整圈算 1 循環
+        cyclesDone++;
+        cycleText.textContent = `循環 ${cyclesDone}`;
+        if(!isOn(infiniteBtn) && cyclesDone >= cyclesTarget){ stopAll(); return; }
+      }
+      beep();
+    }
+
+    function loop(){
+      const t = now();
+      const elapsed = (t - phaseStart) / 1000;
+      const duration = secEach;
+      const p = clamp(elapsed / duration, 0, 1);
+
+      // 倒數
+      const remain = Math.ceil(duration - elapsed);
+      countText.textContent = remain > 0 ? `${remain}s` : '0s';
+
+      // 邊框進度 & 點位置
+      const board = document.querySelector('.board');
+      const W = board.clientWidth; const H = board.clientHeight;
+      const pad = 6; // 與邊的距離
+      const L = W - pad*2; // 邊長
+
+      // 0..1 映射到四邊，依相位不同
+      let progressTop=0, progressRight=0, progressBottom=0, progressLeft=0;
+      let x=0, y=0;
+      if(phase === Phase.Inhale){
+        // 上邊 0→1
+        progressTop = p * 100;
+        x = pad + L * p; y = pad;
+      } else if(phase === Phase.Hold1){
+        // 右邊 0→1
+        progressTop = 100; progressRight = p * 100;
+        x = pad + L; y = pad + L * p;
+      } else if(phase === Phase.Exhale){
+        // 下邊 0→1（從右往左表現）
+        progressTop = 100; progressRight = 100; progressBottom = p * 100;
+        x = pad + L * (1 - p); y = pad + L;
+      } else {
+        // 左邊 0→1（從下往上表現）
+        progressTop = 100; progressRight = 100; progressBottom = 100; progressLeft = p * 100;
+        x = pad; y = pad + L * (1 - p);
+      }
+
+      edgeTop.style.width = progressTop + '%';
+      edgeRight.style.height = progressRight + '%';
+      edgeBottom.style.width = progressBottom + '%';
+      edgeLeft.style.height = progressLeft + '%';
+      dot.style.transform = `translate(${x - 9}px, ${y - 9}px)`;
+
+      // 呼吸條：吸/呼時從 0→100，停時維持
+      if(phase === Phase.Inhale){ breathFill.style.width = (p*100).toFixed(1)+'%'; }
+      else if(phase === Phase.Exhale){ breathFill.style.width = ((1-p)*100).toFixed(1)+'%'; }
+
+      if(elapsed >= duration){ nextPhase(); }
+      if(running && !paused){ raf = requestAnimationFrame(loop); }
+    }
+
+    // —— 事件綁定 ——
+    startBtn.addEventListener('click', start);
+    resetBtn.addEventListener('click', () => { configure(); stopAll(); });
+    fsBtn.addEventListener('click', () => {
+      if(!document.fullscreenElement) document.documentElement.requestFullscreen().catch(()=>{});
+      else document.exitFullscreen();
+    });
+    soundBtn.addEventListener('click', () => { setToggle(soundBtn, !isOn(soundBtn)); store.save(); });
+    infiniteBtn.addEventListener('click', () => { setToggle(infiniteBtn, !isOn(infiniteBtn)); store.save(); });
+    panicBtn.addEventListener('click', stopAll);
+
+    secInput.addEventListener('change', configure);
+    cyclesInput.addEventListener('change', configure);
+
+    window.addEventListener('keydown', (e) => {
+      if(e.target.tagName === 'INPUT') return; // avoid when typing
+      if(e.code === 'Space'){ e.preventDefault(); start(); }
+      else if(e.key === 'r' || e.key === 'R'){ stopAll(); }
+      else if(e.key === 'f' || e.key === 'F'){ fsBtn.click(); }
+      else if(e.key === 's' || e.key === 'S'){ soundBtn.click(); }
+      else if(e.key === '+'){ secInput.value = Number(secInput.value||4) + 1; configure(); }
+      else if(e.key === '-'){ secInput.value = Number(secInput.value||4) - 1; configure(); }
+      else if(e.key === '['){ cyclesInput.value = Number(cyclesInput.value||6) - 1; configure(); }
+      else if(e.key === ']'){ cyclesInput.value = Number(cyclesInput.value||6) + 1; configure(); }
+    });
+
+    // 初始
+    store.load();
+    resetVisual();
+  </script>
+</body>
+</html>
