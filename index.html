@@ -1,466 +1,464 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>盒式呼吸｜放鬆練習</title>
-  <meta name="description" content="簡潔的盒式呼吸（吸-停-呼-停）練習工具，支援自訂節奏、聲音提示、全螢幕、鍵盤快捷鍵。" />
+  <title>盒式呼吸 | Box Breathing – 放鬆練習</title>
   <style>
     :root{
-      --bg: #0b1020;
-      --fg: #e9eefb;
-      --muted: #9fb0d0;
-      --accent: #6aa8ff;
-      --accent-2: #7effc5;
-      --danger: #ff6b6b;
-      --panel: #131a33;
-      --ring: #223060;
+      --bg:#0b0d10; --fg:#e6e7eb; --muted:#a9adb7; --accent:#6ee7ff; --good:#76e39d; --warn:#ffb86c;
+      --card:#151922; --ring:#2a3242; --ring2:#3a465d; --btn:#202737; --btnHover:#2a3346;
     }
-    html, body {
-      height: 100%;
-    }
-    body {
-      margin: 0;
-      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans TC", "Helvetica Neue", Arial, "Apple Color Emoji", "Segoe UI Emoji";
-      background: radial-gradient(1200px 800px at 70% -10%, #18224a 0%, var(--bg) 55%);
-      color: var(--fg);
-      display: grid;
-      grid-template-rows: auto 1fr auto;
-      gap: 12px;
-      min-height: 100vh;
-    }
-    header, footer {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 14px 18px;
-      background: linear-gradient(180deg, rgba(19,26,51,.9), rgba(19,26,51,.6));
-      border-bottom: 1px solid rgba(255,255,255,0.06);
-      backdrop-filter: blur(6px);
-    }
-    header h1 {
-      font-size: 18px;
-      margin: 0;
-      letter-spacing: .5px;
-      color: var(--fg);
-    }
-    .muted { color: var(--muted); }
+    html,body{height:100%;background:var(--bg);color:var(--fg);font-family:system-ui, -apple-system, Segoe UI, Roboto, Noto Sans, "PingFang TC","Microsoft JhengHei", sans-serif;}
+    .wrap{max-width:980px;margin:0 auto;padding:20px;}
+    h1{font-size:clamp(22px,3vw,34px);margin:6px 0 14px;}
+    .sub{color:var(--muted);font-size:14px;}
+    .grid{display:grid;grid-template-columns:1.2fr 1fr;gap:16px;margin-top:16px}
+    @media (max-width:980px){.grid{grid-template-columns:1fr;}}
 
-    .container {
-      display: grid;
-      grid-template-columns: 320px 1fr;
-      gap: 18px;
-      padding: 18px;
-    }
-    @media (max-width: 900px) {
-      .container { grid-template-columns: 1fr; }
-    }
+    .card{background:var(--card);border-radius:16px;padding:16px;box-shadow:0 4px 16px rgba(0,0,0,.25);}
+    .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+    .row > *{margin:4px 0}
 
-    .panel {
-      background: var(--panel);
-      border: 1px solid rgba(255,255,255,0.06);
-      border-radius: 16px;
-      padding: 16px;
-      box-shadow: 0 10px 30px rgba(0,0,0,.3);
-    }
+    label{font-size:12px;color:var(--muted)}
+    .pill{background:var(--btn);border:1px solid #2a3346;color:var(--fg);padding:8px 12px;border-radius:999px;cursor:pointer;}
+    .pill:hover{background:var(--btnHover)}
+    .btn{background:var(--accent);color:#001018;border:none;border-radius:12px;padding:10px 14px;font-weight:700;cursor:pointer}
+    .btn.secondary{background:var(--btn);color:var(--fg);border:1px solid #344058}
+    .btn:disabled{opacity:.5;cursor:not-allowed}
 
-    .controls label { display:block; font-size: 14px; margin: 12px 0 6px; color: var(--muted); }
-    .controls input[type="number"], .controls input[type="range"], .controls select {
-      width: 100%; padding: 10px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.08);
-      background: #0f1530; color: var(--fg);
-    }
-    .row { display:flex; gap: 10px; }
-    .row > * { flex: 1; }
+    .stack{display:flex;flex-direction:column;gap:10px}
+    .pair{display:grid;grid-template-columns:120px 1fr 70px;gap:10px;align-items:center}
+    .pair input[type=range]{width:100%}
+    .val{font-variant-numeric:tabular-nums;text-align:right;color:var(--muted)}
 
-    .btn {
-      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-      padding: 10px 14px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1);
-      background: linear-gradient(180deg, #18224a, #111735);
-      color: var(--fg); cursor: pointer; font-weight: 600;
-      transition: transform .06s ease, background .2s ease, border-color .2s ease;
-      user-select: none;
+    .ringBox{display:grid;place-items:center;position:relative;aspect-ratio:1;border-radius:16px;background:radial-gradient(120px 120px at 50% 50%, rgba(255,255,255,.06), transparent 60%),
+      conic-gradient(var(--accent) var(--prog,0%), var(--ring) 0%);
+      outline:1px solid #2a3346;
     }
-    .btn:hover { transform: translateY(-1px); border-color: rgba(255,255,255,0.18); }
-    .btn:active { transform: translateY(0); }
-    .btn-primary { background: linear-gradient(180deg, #3677ff, #2151c8); border-color: #2d63e6; }
-    .btn-danger { background: linear-gradient(180deg, #ff7272, #d74646); border-color: #ff8686; }
-    .btn-ghost { background: transparent; border-color: rgba(255,255,255,0.12); }
-    .btn-toggle.active { outline: 2px solid var(--accent); }
+    .ringInner{position:absolute;inset:16px;border-radius:12px;background:linear-gradient(180deg,#0e1219,#0b0d10);display:grid;place-items:center}
+    .phase{font-size:clamp(16px,2.4vw,24px);letter-spacing:.6px}
+    .count{font-size:clamp(32px,7vw,72px);font-weight:800;line-height:1.1}
+    .minor{color:var(--muted);font-size:12px}
 
-    .hint { font-size: 12px; color: var(--muted); margin-top: 8px; line-height: 1.5; }
+    .barWrap{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+    .bar{height:16px;border-radius:10px;background:var(--ring);overflow:hidden}
+    .bar>span{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--good),var(--accent));transition:width .2s linear}
 
-    /* Coach area */
-    .stage {
-      display: grid; place-items: center; height: 100%;
-    }
-    .coach {
-      display: grid; gap: 14px; place-items: center;
-    }
-    .phase {
-      font-size: clamp(26px, 3.8vw, 44px);
-      font-weight: 800; letter-spacing: 1px;
-      text-shadow: 0 8px 24px rgba(0,0,0,.45);
-    }
-    .countdown { font-size: clamp(18px, 3vw, 28px); color: var(--accent-2); font-variant-numeric: tabular-nums; }
-    .cycle { color: var(--muted); font-size: 14px; }
+    .dose{display:flex;align-items:center;gap:10px}
+    .dose h2{font-size:16px;margin:0}
+    .doseTime{font-variant-numeric:tabular-nums;font-weight:700}
 
-    /* Square track */
-    .board {
-      width: min(68vh, 68vw);
-      aspect-ratio: 1 / 1;
-      position: relative;
-      border-radius: 18px;
-      border: 2px solid var(--ring);
-      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.04), 0 20px 60px rgba(0,0,0,.35);
-      background: radial-gradient(500px 300px at 20% 0%, rgba(106,168,255,.12), transparent 60%);
-      overflow: hidden;
-    }
-    .progress {
-      position: absolute; inset: 0; pointer-events: none;
-    }
-    .edge {
-      position: absolute; background: linear-gradient(90deg, var(--accent), transparent);
-      opacity: .28;
-    }
-    .edge.top { top: 0; left: 0; height: 4px; width: 0%; }
-    .edge.right { top: 0; right: 0; width: 4px; height: 0%; background: linear-gradient(180deg, var(--accent), transparent); }
-    .edge.bottom { bottom: 0; right: 0; height: 4px; width: 0%; background: linear-gradient(270deg, var(--accent), transparent); }
-    .edge.left { bottom: 0; left: 0; width: 4px; height: 0%; background: linear-gradient(0deg, var(--accent), transparent); }
+    .note{font-size:13px;color:var(--muted)}
+    .teach li{margin:6px 0}
+    .toggle{display:flex;align-items:center;gap:8px}
+    .toggle input{transform:scale(1.2)}
+    .seg{display:flex;gap:6px;flex-wrap:wrap}
+    .seg button{background:var(--btn);border:1px solid #344058;color:var(--fg);padding:6px 10px;border-radius:10px;cursor:pointer}
+    .seg button[aria-pressed="true"]{background:#2c3a51;color:white;border-color:#3f5475}
 
-    .dot {
-      --s: 18px; width: var(--s); height: var(--s);
-      border-radius: 999px; background: radial-gradient(circle at 30% 30%, #fff, #cfe2ff 35%, #5da1ff 60%, #1f4dbd);
-      box-shadow: 0 0 0 6px rgba(106,168,255,.12), 0 12px 28px rgba(0,0,0,.45);
-      position: absolute; left: -9px; top: -9px;
-      transform: translate(0, 0);
-      transition: filter .2s ease;
-    }
-
-    .breath-bar {
-      width: 100%; height: 10px; border-radius: 999px; background: rgba(255,255,255,0.06);
-      overflow: hidden; margin-top: 10px; border: 1px solid rgba(255,255,255,0.08);
-    }
-    .breath-fill {
-      height: 100%; width: 0%; background: linear-gradient(90deg, var(--accent), var(--accent-2));
-      transition: width .2s linear;
-    }
-
-    .kbd { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; font-size: 12px; padding: 2px 6px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.15); }
-
-    details { border-top: 1px dashed rgba(255,255,255,0.15); margin-top: 12px; padding-top: 10px; }
-    summary { cursor: pointer; color: var(--muted); }
+    .footer{margin-top:18px;color:var(--muted);font-size:12px}
+    .warn{color:var(--warn)}
   </style>
 </head>
 <body>
-  <header>
-    <h1>盒式呼吸｜放鬆練習</h1>
-    <div class="muted">吸 → 停 → 呼 → 停｜視覺、聲音、鍵盤操控</div>
-  </header>
+  <div class="wrap">
+    <h1>盒式呼吸｜Box Breathing</h1>
+    <div class="sub">放鬆練習用 – 極簡、不花俏，穩穩把自律神經帶回中線。Minimalist, steady pacing for downshifting your nervous system.</div>
 
-  <main class="container">
-    <section class="panel controls" aria-label="控制面板">
+    <div class="dose card" role="region" aria-label="Daily dose">
+      <h2>每日劑量｜Daily Dose</h2>
       <div class="row">
-        <div>
-          <label for="sec">每一側秒數（吸/停/呼/停）</label>
-          <input id="sec" type="number" min="2" max="20" step="1" value="4" />
+        <div>今日已完成｜Today: <span id="doneToday" class="doseTime">00:00</span></div>
+        <div class="seg" aria-label="Goal presets">
+          <button class="pill" data-goal="300">新手 5 分鐘 / 5 min</button>
+          <button class="pill" data-goal="600">進階 10 分鐘 / 10 min</button>
+          <button class="pill" data-goal="900">進階 15 分鐘 / 15 min</button>
+          <button class="pill" id="customGoalBtn">自訂 / Custom</button>
         </div>
-        <div>
-          <label for="cycles">循環次數（4步為 1 循環）</label>
-          <input id="cycles" type="number" min="1" max="60" step="1" value="6" />
-        </div>
+        <div>目標｜Goal: <span id="goalLabel">—</span></div>
       </div>
+    </div>
 
-      <div class="row" style="margin-top:8px; align-items:center;">
-        <button id="startBtn" class="btn btn-primary" aria-label="開始或暫停"><span id="startLabel">開始</span>（空白鍵）</button>
-        <button id="resetBtn" class="btn btn-ghost" aria-label="重置">重置 <span class="muted">R</span></button>
-        <button id="fsBtn" class="btn btn-ghost" aria-label="全螢幕">全螢幕 <span class="muted">F</span></button>
-      </div>
-
-      <div class="row" style="margin-top:8px; align-items:center;">
-        <button id="soundBtn" class="btn btn-toggle" aria-pressed="false" aria-label="聲音提示切換">聲音提示 <span class="muted">S</span></button>
-        <button id="infiniteBtn" class="btn btn-toggle" aria-pressed="false" aria-label="無限循環切換">無限循環</button>
-        <button id="panicBtn" class="btn btn-danger" aria-label="立刻停止">中止</button>
-      </div>
-
-      <details>
-        <summary>鍵盤快捷鍵</summary>
-        <div class="hint">
-          <span class="kbd">Space</span> 開始/暫停；
-          <span class="kbd">R</span> 重置；
-          <span class="kbd">F</span> 全螢幕；
-          <span class="kbd">S</span> 聲音；
-          <span class="kbd">+</span>/<span class="kbd">-</span> 每側秒數 ±1；
-          <span class="kbd">[</span>/<span class="kbd">]</span> 循環數 ±1。
-        </div>
-      </details>
-
-      <details>
-        <summary>安全提醒與說明</summary>
-        <div class="hint">
-          放鬆為首要目標。若感到暈眩、胸悶或不適，請立即停止並恢復自然呼吸。若有心肺或血壓相關疾病、懷孕或醫師不建議的情況，請先諮詢專業。
-        </div>
-      </details>
-    </section>
-
-    <section class="panel stage" aria-live="polite" aria-atomic="true">
-      <div class="coach">
-        <div class="phase" id="phaseText">準備</div>
-        <div class="countdown" id="countText">—</div>
-        <div class="cycle" id="cycleText">循環 0</div>
-
-        <div class="board" aria-hidden="true">
-          <div class="progress">
-            <div class="edge top" id="edgeTop"></div>
-            <div class="edge right" id="edgeRight"></div>
-            <div class="edge bottom" id="edgeBottom"></div>
-            <div class="edge left" id="edgeLeft"></div>
-            <div class="dot" id="dot"></div>
+    <div class="grid">
+      <section class="card" aria-label="Trainer">
+        <div class="ringBox" id="ring" style="--prog:0%">
+          <div class="ringInner">
+            <div style="text-align:center">
+              <div class="phase" id="phaseLabel">待機｜Idle</div>
+              <div class="count" id="countdown">0</div>
+              <div class="minor" id="sessionInfo">—</div>
+            </div>
           </div>
         </div>
 
-        <div class="breath-bar" aria-hidden="true"><div class="breath-fill" id="breathFill"></div></div>
-        <div class="hint">提示：放鬆肩頸與下顎，舌尖輕抵上顎，腹部自然起伏。</div>
-      </div>
-    </section>
-  </main>
+        <div class="barWrap" aria-label="Equal-area visual bars">
+          <div>
+            <label>吸｜Inhale</label>
+            <div class="bar" aria-hidden="true"><span id="barIn"></span></div>
+          </div>
+          <div>
+            <label>呼｜Exhale</label>
+            <div class="bar" aria-hidden="true"><span id="barOut"></span></div>
+          </div>
+        </div>
 
-  <footer>
-    <div class="muted">這個工具不收集任何資料。設定會保存在瀏覽器本機。</div>
-    <div class="muted">© 2025 Box Breathing Coach</div>
-  </footer>
+        <div class="row" style="justify-content:space-between;margin-top:12px">
+          <div class="seg" role="tablist" aria-label="Mode">
+            <button role="tab" aria-pressed="true" data-mode="box">盒式 4-4-4-4｜Box</button>
+            <button role="tab" aria-pressed="false" data-mode="478">4-7-8</button>
+            <button role="tab" aria-pressed="false" data-mode="resonance">共振 5.5 cpm｜Resonance</button>
+          </div>
+          <div class="toggle">
+            <input type="checkbox" id="cooldown" />
+            <label for="cooldown">收尾加 1 分鐘「4-7-8 或 5.5 cpm」｜Finish with 1‑min cool‑down</label>
+          </div>
+        </div>
 
-  <script>
-    // —— 簡單狀態機 ——
-    const Phase = { Inhale: 0, Hold1: 1, Exhale: 2, Hold2: 3 };
-    const PhaseName = {
-      [Phase.Inhale]: '吸氣',
-      [Phase.Hold1]: '閉氣',
-      [Phase.Exhale]: '呼氣',
-      [Phase.Hold2]: '閉氣'
-    };
+        <div class="stack" style="margin-top:10px" id="sliders">
+          <div class="pair"><label>吸氣秒數｜Inhale (s)</label>
+            <input type="range" id="inh" min="2" max="20" value="4" step="1" />
+            <div class="val" id="inhV">4s</div></div>
+          <div class="pair"><label>屏息秒數｜Hold (s)</label>
+            <input type="range" id="hold1" min="0" max="20" value="4" step="1" />
+            <div class="val" id="hold1V">4s</div></div>
+          <div class="pair"><label>呼氣秒數｜Exhale (s)</label>
+            <input type="range" id="exh" min="2" max="20" value="4" step="1" />
+            <div class="val" id="exhV">4s</div></div>
+          <div class="pair"><label>屏息秒數｜Hold (s)</label>
+            <input type="range" id="hold2" min="0" max="20" value="4" step="1" />
+            <div class="val" id="hold2V">4s</div></div>
+          <div class="pair"><label>訓練時間｜Session length (min)</label>
+            <input type="range" id="minutes" min="1" max="30" value="5" step="1" />
+            <div class="val" id="minV">5</div></div>
+        </div>
 
-    const secInput = document.getElementById('sec');
-    const cyclesInput = document.getElementById('cycles');
-    const startBtn = document.getElementById('startBtn');
-    const startLabel = document.getElementById('startLabel');
-    const resetBtn = document.getElementById('resetBtn');
-    const fsBtn = document.getElementById('fsBtn');
-    const soundBtn = document.getElementById('soundBtn');
-    const infiniteBtn = document.getElementById('infiniteBtn');
-    const panicBtn = document.getElementById('panicBtn');
+        <div class="row" style="justify-content:space-between;margin-top:8px">
+          <div class="toggle"><input type="checkbox" id="noiseToggle" /><label for="noiseToggle">白/粉紅噪音（相位切換淡入/淡出 0.2s）｜White/Pink noise (0.2s fade)</label></div>
+          <div class="seg" aria-label="Noise type">
+            <button aria-pressed="true" data-noise="white">White</button>
+            <button aria-pressed="false" data-noise="pink">Pink</button>
+          </div>
+        </div>
+        <div class="row" style="justify-content:space-between;margin-top:4px">
+          <div class="toggle"><input type="checkbox" id="beepToggle" /><label for="beepToggle">相位提示音｜Phase beep</label></div>
+          <div class="note">不喜歡就關掉。Turn it off if it’s annoying.</div>
+        </div>
 
-    const phaseText = document.getElementById('phaseText');
-    const countText = document.getElementById('countText');
-    const cycleText = document.getElementById('cycleText');
+        <div class="row" style="margin-top:12px;gap:8px">
+          <button class="btn" id="startBtn">開始｜Start</button>
+          <button class="btn secondary" id="stopBtn" disabled>停止｜Stop</button>
+          <button class="btn secondary" id="resetBtn">重設｜Reset</button>
+        </div>
+        <div class="note" style="margin-top:8px">
+          <span class="warn">過度換氣陷阱｜Beware hyperventilation:</span> 練習時以輕柔鼻吸、鼻呼為原則，秒數上限已限制 20s，吸/呼視覺條做成同面積，避免「吸氣視覺獎勵」過強。
+        </div>
+      </section>
 
-    const edgeTop = document.getElementById('edgeTop');
-    const edgeRight = document.getElementById('edgeRight');
-    const edgeBottom = document.getElementById('edgeBottom');
-    const edgeLeft = document.getElementById('edgeLeft');
-    const dot = document.getElementById('dot');
-    const breathFill = document.getElementById('breathFill');
+      <section class="card" aria-label="Teaching">
+        <h3>怎麼做｜How to practice</h3>
+        <ul class="teach">
+          <li>盒式呼吸（Box Breathing）= 吸 / 停 / 呼 / 停 四個相位等長；建議 <b>4‑4‑4‑4</b> 起步。</li>
+          <li>新手每日劑量：<b>5 分鐘</b>；進階：<b>10–15 分鐘</b>。Daily dose: 5 min (beginner), 10–15 min (intermediate)。</li>
+          <li>環境雜訊干預：可啟用白/粉紅噪音，<b>相位切換時淡入/淡出 0.2s</b>，降低突發聲帶來的驚嚇反射。</li>
+          <li>進階收尾：可勾選<b>收尾 1 分鐘 4‑7‑8 或 5.5 cpm 共振呼吸</b>，把放鬆感帶出練習情境。</li>
+          <li>安全原則：若感到頭暈、手麻，<b>立刻停止</b>，改為自然呼吸並坐下休息。</li>
+        </ul>
+        <h3>為什麼有效｜Why it works</h3>
+        <p>等長節律降低呼吸中樞輸出，配合慢呼氣與短暫屏息，能刺激迷走神經活動，使交感活性下降、心率變異度（HRV）上升。白/粉紅噪音作為感覺遮蔽（sensory gating）降低外部驟變干擾。</p>
+      </section>
+    </div>
 
-    const store = {
-      load(){
-        try{
-          const s = JSON.parse(localStorage.getItem('boxbreath-v1')||'{}');
-          if(s.sec) secInput.value = s.sec;
-          if(s.cycles) cyclesInput.value = s.cycles;
-          if(typeof s.soundOn === 'boolean') setToggle(soundBtn, s.soundOn);
-          if(typeof s.infinite === 'boolean') setToggle(infiniteBtn, s.infinite);
-        }catch{}
-      },
-      save(){
-        const s = {
-          sec: Number(secInput.value||4),
-          cycles: Number(cyclesInput.value||6),
-          soundOn: isOn(soundBtn),
-          infinite: isOn(infiniteBtn)
+    <div class="footer">
+      無資料上傳；所有資料僅存於你的瀏覽器（localStorage）。No cloud–only local.
+    </div>
+  </div>
+
+<script>
+(function(){
+  // ===== Utilities =====
+  const $ = sel => document.querySelector(sel);
+  const $$ = sel => Array.from(document.querySelectorAll(sel));
+  const clamp = (v,min,max)=>Math.max(min,Math.min(max,v));
+  const fmtTime = sec=>{
+    const m=Math.floor(sec/60), s=Math.floor(sec%60);
+    return `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  }
+  const todayKey = ()=>{
+    const d=new Date();
+    const y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,'0'), da=String(d.getDate()).padStart(2,'0');
+    return `boxbreath_${y}${m}${da}`;
+  }
+
+  // ===== Daily dose =====
+  function loadToday(){
+    const sec = Number(localStorage.getItem(todayKey())||0);
+    $('#doneToday').textContent = fmtTime(sec);
+  }
+  function addToday(seconds){
+    const k = todayKey();
+    const cur = Number(localStorage.getItem(k)||0);
+    const next = cur + seconds;
+    localStorage.setItem(k, String(next));
+    $('#doneToday').textContent = fmtTime(next);
+  }
+
+  // ===== Audio engine =====
+  let audioCtx=null, noiseNode=null, noiseGain=null, beepGain=null, beepOsc=null, noiseType='white';
+  function ensureAudio(){
+    if(!audioCtx){
+      audioCtx = new (window.AudioContext||window.webkitAudioContext)();
+      // Noise chain
+      noiseGain = audioCtx.createGain();
+      noiseGain.gain.value = 0.0;
+      createNoise();
+      noiseNode.connect(noiseGain).connect(audioCtx.destination);
+      // Beep chain
+      beepGain = audioCtx.createGain();
+      beepGain.gain.value = 0.0;
+      beepOsc = audioCtx.createOscillator();
+      beepOsc.type = 'sine';
+      beepOsc.frequency.value = 880;
+      beepOsc.connect(beepGain).connect(audioCtx.destination);
+      beepOsc.start();
+    }
+  }
+  function createNoise(){
+    if(noiseNode) try{noiseNode.disconnect()}catch(e){}
+    // Buffer noise (white) -> optional filter network for pink feel
+    const len = audioCtx.sampleRate * 2;
+    const buffer = audioCtx.createBuffer(1, len, audioCtx.sampleRate);
+    const data = buffer.getChannelData(0);
+    // Fill white
+    for(let i=0;i<len;i++){ data[i] = Math.random()*2-1; }
+    const src = audioCtx.createBufferSource();
+    src.buffer = buffer; src.loop = true;
+    if(noiseType==='white'){
+      noiseNode = src; // direct
+    }else{
+      // Pink-ish: simple 1/f via lowpass shelves chain approximation
+      const biq1 = audioCtx.createBiquadFilter(); biq1.type='lowshelf'; biq1.frequency.value=200; biq1.gain.value=6;
+      const biq2 = audioCtx.createBiquadFilter(); biq2.type='lowshelf'; biq2.frequency.value=800; biq2.gain.value=3;
+      const biq3 = audioCtx.createBiquadFilter(); biq3.type='highcut' in biq3 ? 'highcut':'lowpass'; biq3.frequency.value=6000;
+      src.connect(biq1).connect(biq2).connect(biq3);
+      noiseNode = biq3;
+    }
+    src.start();
+  }
+  function setNoiseType(t){
+    noiseType=t; if(!audioCtx) return; createNoise(); noiseNode.connect(noiseGain);
+  }
+  function phaseBeep(){
+    if(!$('#beepToggle').checked) return;
+    ensureAudio();
+    const now = audioCtx.currentTime;
+    beepGain.gain.cancelScheduledValues(now);
+    beepGain.gain.setValueAtTime(0, now);
+    beepGain.gain.linearRampToValueAtTime(0.12, now+0.02);
+    beepGain.gain.linearRampToValueAtTime(0.0, now+0.18);
+  }
+  function noiseFade(on){
+    if(!$('#noiseToggle').checked) return;
+    ensureAudio();
+    const now = audioCtx.currentTime;
+    noiseGain.gain.cancelScheduledValues(now);
+    const target = on ? 0.03 : 0.0;
+    noiseGain.gain.setValueAtTime(noiseGain.gain.value, now);
+    noiseGain.gain.linearRampToValueAtTime(target, now+0.2);
+  }
+
+  // ===== Breathing engine =====
+  const ring = $('#ring');
+  const phaseLabel = $('#phaseLabel');
+  const countdown = $('#countdown');
+  const barIn = $('#barIn');
+  const barOut = $('#barOut');
+  const goalLabel = $('#goalLabel');
+
+  let mode='box';
+  let running=false, sessGoalSec=0, sessLenSec=300, elapsed=0, engine=null, lastTick=0;
+
+  function getPhaseDurations(){
+    if(mode==='box'){
+      return [Number($('#inh').value), Number($('#hold1').value), Number($('#exh').value), Number($('#hold2').value)];
+    }else if(mode==='478'){
+      return [4,7,8,0]; // inhale, hold, exhale, hold
+    }else{ // resonance ~5.5 cpm => 10.9 s cycle -> 5.5 in + 5.4 out approx
+      return [5.5,0,5.5,0];
+    }
+  }
+  const phaseNames = [
+    {zh:'吸氣', en:'Inhale'},
+    {zh:'停', en:'Hold'},
+    {zh:'呼氣', en:'Exhale'},
+    {zh:'停', en:'Hold'},
+  ];
+
+  function resetUI(){
+    running=false; elapsed=0; setProgress(0);
+    setPhaseDisplay('待機｜Idle','—'); countdown.textContent='0';
+    barIn.style.width='0%'; barOut.style.width='0%';
+    $('#startBtn').disabled=false; $('#stopBtn').disabled=true;
+    noiseFade(false);
+  }
+
+  function setProgress(p){ ring.style.setProperty('--prog', `${(p*100).toFixed(2)}%`); }
+  function setPhaseDisplay(textMinor,timeLeft){
+    phaseLabel.textContent = textMinor;
+    $('#sessionInfo').textContent = timeLeft;
+  }
+
+  function start(){
+    if(running) return; running=true; ensureAudio();
+    sessLenSec = Number($('#minutes').value)*60; elapsed=0; lastTick=performance.now();
+    $('#startBtn').disabled=true; $('#stopBtn').disabled=false;
+    runCycle();
+  }
+  function stop(){
+    running=false; if(engine){clearTimeout(engine); engine=null;} noiseFade(false);
+    $('#startBtn').disabled=false; $('#stopBtn').disabled=true;
+  }
+
+  let phaseIdx=0, phaseTimeLeft=0, cycleTotal=0;
+  function runCycle(){
+    const durs = getPhaseDurations();
+    cycleTotal = durs.reduce((a,b)=>a+b,0);
+    phaseIdx=0; phaseTimeLeft=durs[0];
+    noiseFade(true); phaseBeep();
+    tick();
+  }
+
+  function nextPhase(){
+    const durs = getPhaseDurations();
+    phaseIdx = (phaseIdx+1)%4;
+    phaseTimeLeft = durs[phaseIdx];
+    noiseFade(true); phaseBeep();
+  }
+
+  function maybeFinish(){
+    if(elapsed >= sessLenSec){
+      // Optional cool-down
+      if($('#cooldown').checked){
+        // Choose based on current selected tab
+        if(mode==='resonance') mode='resonance';
+        else mode='478';
+        const endAt = elapsed + 60; // 1 min
+        const origGoal = sessLenSec; // keep ring full
+        const loop = ()=>{
+          if(!running) return;
+          const now=performance.now();
+          const dt=(now-lastTick)/1000; lastTick=now;
+          elapsed += dt; setProgress(Math.min(1, elapsed/origGoal));
+          phaseTimeLeft -= dt; if(phaseTimeLeft<=0.01){ nextPhase(); }
+          renderPhase();
+          if(elapsed<endAt){ engine=setTimeout(loop, 50); }
+          else { finish(); }
         };
-        localStorage.setItem('boxbreath-v1', JSON.stringify(s));
+        runCycle(); lastTick=performance.now(); loop();
+        return true;
       }
-    };
-
-    function setToggle(btn, on){
-      btn.classList.toggle('active', on);
-      btn.setAttribute('aria-pressed', String(on));
+      finish();
+      return true;
     }
-    function isOn(btn){ return btn.classList.contains('active'); }
+    return false;
+  }
 
-    // —— 聲音提示 ——
-    let audioCtx = null;
-    function beep(){
-      if(!isOn(soundBtn)) return;
-      try{
-        if(!audioCtx) audioCtx = new (window.AudioContext||window.webkitAudioContext)();
-        const o = audioCtx.createOscillator();
-        const g = audioCtx.createGain();
-        o.type = 'sine';
-        o.frequency.value = 880; // A5
-        g.gain.value = 0.001; // start silent
-        o.connect(g); g.connect(audioCtx.destination);
-        o.start();
-        // quick attack/decay
-        const now = audioCtx.currentTime;
-        g.gain.exponentialRampToValueAtTime(0.2, now + 0.02);
-        g.gain.exponentialRampToValueAtTime(0.0001, now + 0.18);
-        o.stop(now + 0.2);
-      }catch{}
-    }
+  function finish(){
+    stop(); addToday(Math.round(sessLenSec));
+    setPhaseDisplay('完成｜Done', `本次 ${fmtTime(sessLenSec)}｜This session ${fmtTime(sessLenSec)}`);
+  }
 
-    // —— 運動控制 ——
-    let running = false;
-    let paused = false;
-    let raf = 0;
+  function renderPhase(){
+    const names=phaseNames[phaseIdx];
+    const leftAll = Math.max(0, sessLenSec - elapsed);
+    countdown.textContent = Math.ceil(phaseTimeLeft).toString();
+    setPhaseDisplay(`${names.zh}｜${names.en}`, `剩餘｜Left ${fmtTime(leftAll)}`);
+    // Equal-area bars: width proportional to time within IN/OUT only
+    const durs = getPhaseDurations();
+    const inDur=durs[0]||1, outDur=durs[2]||1;
+    const inProgress = phaseIdx===0 ? (1- (phaseTimeLeft/inDur)) : (phaseIdx>0?1:0);
+    const outProgress = phaseIdx===2 ? (1- (phaseTimeLeft/outDur)) : (phaseIdx>2?1:0);
+    barIn.style.width = `${(inProgress*100).toFixed(1)}%`;
+    barOut.style.width = `${(outProgress*100).toFixed(1)}%`;
+  }
 
-    let phase = Phase.Inhale;
-    let phaseStart = 0;
-    let secEach = 4;
-    let cyclesTarget = 6;
-    let cyclesDone = 0;
+  function tick(){
+    if(!running) return;
+    const now=performance.now();
+    const dt=(now-lastTick)/1000; lastTick=now;
+    elapsed += dt; setProgress(Math.min(1, elapsed/sessLenSec));
+    phaseTimeLeft -= dt; if(phaseTimeLeft<=0.01){ nextPhase(); }
+    renderPhase();
+    if(!maybeFinish()) engine=setTimeout(tick, 50);
+  }
 
-    function now(){ return performance.now(); }
+  // ===== UI wiring =====
+  $$('#sliders input[type=range]').forEach(r=>{
+    r.addEventListener('input', ()=>{
+      // hard protection: clamp to 20s already via max
+      const v = clamp(Number(r.value), Number(r.min), Number(r.max));
+      r.value = v;
+      $('#'+r.id+'V').textContent = (r.id==='minutes'? v : v+'s');
+    })
+  });
+  $('#minutes').addEventListener('input', e=>{ sessLenSec=Number(e.target.value)*60; });
 
-    function resetVisual(){
-      edgeTop.style.width = '0%';
-      edgeRight.style.height = '0%';
-      edgeBottom.style.width = '0%';
-      edgeLeft.style.height = '0%';
-      dot.style.transform = `translate(0px, 0px)`;
-      breathFill.style.width = '0%';
-      countText.textContent = '—';
-      phaseText.textContent = '準備';
-      cycleText.textContent = `循環 ${cyclesDone}`;
-    }
-
-    function configure(){
-      secEach = clamp(Number(secInput.value||4), 2, 20);
-      cyclesTarget = clamp(Number(cyclesInput.value||6), 1, 60);
-      secInput.value = secEach; cyclesInput.value = cyclesTarget;
-      store.save();
-    }
-
-    function clamp(v, a, b){ return Math.max(a, Math.min(b, v)); }
-
-    function start(){
-      if(running && !paused){ pause(); return; }
-      if(paused){ paused = false; phaseStart = now() - pausedOffset; loop(); updateButtons(); return; }
-      // fresh start
-      configure();
-      running = true; paused = false; cyclesDone = 0; phase = Phase.Inhale; phaseStart = now();
-      phaseText.textContent = PhaseName[phase];
-      cycleText.textContent = `循環 ${cyclesDone}`;
-      beep();
-      cancelAnimationFrame(raf); loop(); updateButtons();
-    }
-
-    function pause(){
-      paused = true; cancelAnimationFrame(raf); pausedOffset = now() - phaseStart; updateButtons();
-    }
-
-    function stopAll(){
-      running = false; paused = false; cancelAnimationFrame(raf); resetVisual(); updateButtons();
-    }
-
-    function updateButtons(){
-      startLabel.textContent = (!running || paused) ? '開始' : '暫停';
-    }
-
-    let pausedOffset = 0;
-
-    function nextPhase(){
-      phase = (phase + 1) % 4;
-      phaseStart = now();
-      phaseText.textContent = PhaseName[phase];
-      if(phase === Phase.Inhale) {
-        // 完成一整圈算 1 循環
-        cyclesDone++;
-        cycleText.textContent = `循環 ${cyclesDone}`;
-        if(!isOn(infiniteBtn) && cyclesDone >= cyclesTarget){ stopAll(); return; }
-      }
-      beep();
-    }
-
-    function loop(){
-      const t = now();
-      const elapsed = (t - phaseStart) / 1000;
-      const duration = secEach;
-      const p = clamp(elapsed / duration, 0, 1);
-
-      // 倒數
-      const remain = Math.ceil(duration - elapsed);
-      countText.textContent = remain > 0 ? `${remain}s` : '0s';
-
-      // 邊框進度 & 點位置
-      const board = document.querySelector('.board');
-      const W = board.clientWidth; const H = board.clientHeight;
-      const pad = 6; // 與邊的距離
-      const L = W - pad*2; // 邊長
-
-      // 0..1 映射到四邊，依相位不同
-      let progressTop=0, progressRight=0, progressBottom=0, progressLeft=0;
-      let x=0, y=0;
-      if(phase === Phase.Inhale){
-        // 上邊 0→1
-        progressTop = p * 100;
-        x = pad + L * p; y = pad;
-      } else if(phase === Phase.Hold1){
-        // 右邊 0→1
-        progressTop = 100; progressRight = p * 100;
-        x = pad + L; y = pad + L * p;
-      } else if(phase === Phase.Exhale){
-        // 下邊 0→1（從右往左表現）
-        progressTop = 100; progressRight = 100; progressBottom = p * 100;
-        x = pad + L * (1 - p); y = pad + L;
-      } else {
-        // 左邊 0→1（從下往上表現）
-        progressTop = 100; progressRight = 100; progressBottom = 100; progressLeft = p * 100;
-        x = pad; y = pad + L * (1 - p);
-      }
-
-      edgeTop.style.width = progressTop + '%';
-      edgeRight.style.height = progressRight + '%';
-      edgeBottom.style.width = progressBottom + '%';
-      edgeLeft.style.height = progressLeft + '%';
-      dot.style.transform = `translate(${x - 9}px, ${y - 9}px)`;
-
-      // 呼吸條：吸/呼時從 0→100，停時維持
-      if(phase === Phase.Inhale){ breathFill.style.width = (p*100).toFixed(1)+'%'; }
-      else if(phase === Phase.Exhale){ breathFill.style.width = ((1-p)*100).toFixed(1)+'%'; }
-
-      if(elapsed >= duration){ nextPhase(); }
-      if(running && !paused){ raf = requestAnimationFrame(loop); }
-    }
-
-    // —— 事件綁定 ——
-    startBtn.addEventListener('click', start);
-    resetBtn.addEventListener('click', () => { configure(); stopAll(); });
-    fsBtn.addEventListener('click', () => {
-      if(!document.fullscreenElement) document.documentElement.requestFullscreen().catch(()=>{});
-      else document.exitFullscreen();
+  // Mode tabs
+  $$('.seg [data-mode]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      $$('.seg [data-mode]').forEach(b=>b.setAttribute('aria-pressed','false'));
+      btn.setAttribute('aria-pressed','true');
+      mode = btn.dataset.mode;
+      const sliders = $('#sliders');
+      if(mode==='box'){ sliders.style.display='block'; }
+      else { sliders.style.display='none'; }
+      resetUI();
     });
-    soundBtn.addEventListener('click', () => { setToggle(soundBtn, !isOn(soundBtn)); store.save(); });
-    infiniteBtn.addEventListener('click', () => { setToggle(infiniteBtn, !isOn(infiniteBtn)); store.save(); });
-    panicBtn.addEventListener('click', stopAll);
+  });
 
-    secInput.addEventListener('change', configure);
-    cyclesInput.addEventListener('change', configure);
+  // Noise type
+  $$('.seg [data-noise]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      $$('.seg [data-noise]').forEach(b=>b.setAttribute('aria-pressed','false'));
+      btn.setAttribute('aria-pressed','true');
+      setNoiseType(btn.dataset.noise);
+    })
+  })
 
-    window.addEventListener('keydown', (e) => {
-      if(e.target.tagName === 'INPUT') return; // avoid when typing
-      if(e.code === 'Space'){ e.preventDefault(); start(); }
-      else if(e.key === 'r' || e.key === 'R'){ stopAll(); }
-      else if(e.key === 'f' || e.key === 'F'){ fsBtn.click(); }
-      else if(e.key === 's' || e.key === 'S'){ soundBtn.click(); }
-      else if(e.key === '+'){ secInput.value = Number(secInput.value||4) + 1; configure(); }
-      else if(e.key === '-'){ secInput.value = Number(secInput.value||4) - 1; configure(); }
-      else if(e.key === '['){ cyclesInput.value = Number(cyclesInput.value||6) - 1; configure(); }
-      else if(e.key === ']'){ cyclesInput.value = Number(cyclesInput.value||6) + 1; configure(); }
+  $('#noiseToggle').addEventListener('change', e=>{
+    if(e.target.checked){ ensureAudio(); noiseFade(true);} else { noiseFade(false); }
+  });
+
+  $('#beepToggle').addEventListener('change', ()=>ensureAudio());
+
+  $('#startBtn').addEventListener('click', ()=>{ ensureAudio(); start(); });
+  $('#stopBtn').addEventListener('click', ()=> stop());
+  $('#resetBtn').addEventListener('click', ()=> resetUI());
+
+  // Goal preset buttons
+  $$('.pill[data-goal]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const sec=Number(btn.dataset.goal); sessLenSec=sec; $('#minutes').value=Math.round(sec/60); $('#minV').textContent=Math.round(sec/60);
+      goalLabel.textContent = fmtTime(sec);
     });
+  });
+  $('#customGoalBtn').addEventListener('click', ()=>{
+    const m = prompt('輸入自訂分鐘數｜Enter custom minutes', '12');
+    if(!m) return; const mm = clamp(parseInt(m,10)||5,1,120); sessLenSec=mm*60; $('#minutes').value=mm; $('#minV').textContent=mm; goalLabel.textContent=fmtTime(sessLenSec);
+  });
 
-    // 初始
-    store.load();
-    resetVisual();
-  </script>
+  // Prevent space/arrow scroll during practice
+  window.addEventListener('keydown', (e)=>{
+    if(['Space','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.code)){
+      e.preventDefault();
+    }
+  }, {passive:false});
+
+  // Init
+  loadToday();
+  goalLabel.textContent='—';
+  resetUI();
+})();
+</script>
 </body>
 </html>
